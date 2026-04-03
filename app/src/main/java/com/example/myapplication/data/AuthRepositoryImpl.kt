@@ -2,6 +2,7 @@ package com.example.myapplication.data
 
 import android.util.Log
 import com.example.myapplication.PreferenceManager
+import com.example.myapplication.data.api.AuthApi
 import com.example.myapplication.state.RegistrationState
 import com.example.myapplication.data.model.UserRegisterRequest
 import com.example.myapplication.state.LoginState
@@ -17,8 +18,8 @@ import kotlinx.coroutines.flow.flowOn
 import kotlinx.coroutines.tasks.await
 import java.io.IOException
 
-class AuthRepository(
-    private val api: ApiService,
+class AuthRepositoryImpl(
+    private val api: AuthApi,
     private val preferencesManager: PreferenceManager
 ) {
     private val firebaseAuth: FirebaseAuth = Firebase.auth

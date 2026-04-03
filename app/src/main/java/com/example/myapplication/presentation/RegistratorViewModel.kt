@@ -3,7 +3,7 @@ package com.example.myapplication.presentation
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.myapplication.state.RegistrationState
-import com.example.myapplication.data.AuthRepository
+import com.example.myapplication.data.AuthRepositoryImpl
 import com.example.myapplication.state.LoginState
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -11,7 +11,7 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 
 class RegistratorViewModel(
-    private val authRepository: AuthRepository
+    private val authRepositoryImpl: AuthRepositoryImpl
 ): ViewModel() {
     private val _registrationState = MutableStateFlow<RegistrationState>(RegistrationState.Initial)
     val registrationState: StateFlow<RegistrationState> = _registrationState.asStateFlow()
@@ -93,7 +93,7 @@ class RegistratorViewModel(
     }
     fun register() {
         viewModelScope.launch {
-            authRepository.registerUser(
+            authRepositoryImpl.registerUser(
                 email = _email.value,
                 password = _password.value,
                 name = _name.value
@@ -104,7 +104,7 @@ class RegistratorViewModel(
     }
     fun login() {
         viewModelScope.launch {
-            authRepository.loginUser(
+            authRepositoryImpl.loginUser(
                 email = _email.value,
                 password = _password.value
             ).collect { state ->

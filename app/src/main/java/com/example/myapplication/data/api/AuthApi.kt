@@ -1,4 +1,4 @@
-package com.example.myapplication.data
+package com.example.myapplication.data.api
 
 import com.example.myapplication.data.model.UserRegisterRequest
 import com.example.myapplication.data.model.UserResponse
@@ -10,7 +10,7 @@ import retrofit2.http.Header
 import retrofit2.http.POST
 import retrofit2.http.PUT
 
-interface ApiService {
+interface AuthApi {
     @POST("/api/auth/register")
     suspend fun registerUser(
         @Header("Authorization") authorization: String,  // "Bearer {idToken}"
