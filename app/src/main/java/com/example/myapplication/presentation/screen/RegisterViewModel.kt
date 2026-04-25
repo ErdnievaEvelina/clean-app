@@ -52,7 +52,7 @@ class RegisterViewModelNew(
     private fun register(){
         viewModelScope.launch {
             _uiState.update{it.copy(isLoading = true,error=null)}
-            when(val result = registerUseCase(uiState.value.email, uiState.value.name,uiState.value.password)){
+            when(val result = registerUseCase(uiState.value.email, uiState.value.password,uiState.value.name)){
                 is Result.Error -> _uiState.update { it.copy(isLoading = false, error = result.message) }
                 Result.Loading -> {}
                 is Result.Success -> _uiState.update { it.copy(isLoading = false, success = true) }

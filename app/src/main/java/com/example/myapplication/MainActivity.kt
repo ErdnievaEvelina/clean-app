@@ -30,7 +30,8 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import com.example.myapplication.data.RetrofitInstance
-import com.example.myapplication.data.repository.AuthRepositoryImplNew
+import com.example.myapplication.data.local.datastore.PreferenceManager
+import com.example.myapplication.data.repository.AuthRepositoryImpl
 import com.example.myapplication.domain.usecase.LoginUseCase
 import com.example.myapplication.domain.usecase.RegisterUseCase
 import com.example.myapplication.presentation.HomeScreen
@@ -44,13 +45,13 @@ import com.google.firebase.FirebaseApp
 
 class MainActivity : ComponentActivity() {
     private lateinit var preferencesManager: PreferenceManager
-    private lateinit var authRepositoryImpl: AuthRepositoryImplNew
+    private lateinit var authRepositoryImpl: AuthRepositoryImpl
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
         FirebaseApp.initializeApp(this)
         preferencesManager = PreferenceManager(this)
-        authRepositoryImpl = AuthRepositoryImplNew(RetrofitInstance.api,preferencesManager)
+        authRepositoryImpl = AuthRepositoryImpl(RetrofitInstance.api,preferencesManager)
         setContent {
             MyApplicationTheme {
                 Surface(
@@ -66,7 +67,7 @@ class MainActivity : ComponentActivity() {
 
 @Composable
 fun AppNavGraph(
-    repository: AuthRepositoryImplNew
+    repository: AuthRepositoryImpl
 ){
     val selected= remember { mutableStateOf(Icons.Default.Home) }
     val navController= rememberNavController()
@@ -126,7 +127,7 @@ fun AppNavGraph(
             composable("register") {
                 val viewModelRegister = remember(repository){ RegisterViewModelNew(RegisterUseCase(repository)) }
                 RegistrationScreen(
-                    onRegisterSuccess= {navController.navigate("home")},
+                    onRegisterSuccess= {navController.navigate("login")},
                     onGoToLogin = { navController.popBackStack() },
                     viewModel = viewModelRegister
                 )
@@ -144,94 +145,6 @@ fun AppNavGraph(
     }
 
 }
-/*@Composable
-fun AppNavigate(
-    authRepositoryImpl: AuthRepositoryImpl
-){
-    var userData by remember { mutableStateOf<UserResponse?>(null) }
-    val selected= remember { mutableStateOf(Icons.Default.Home) }
-    val navController= rememberNavController()
-    val navBackStackEntry by navController.currentBackStackEntryAsState()
-    val currentRoute = navBackStackEntry?.destination?.route
-    val showBottomNav = when (currentRoute) {
-        "registr", "login" -> false
-        else -> true
-    }
-    val viewModel: RegistratorViewModel = viewModel(
-        factory = object:ViewModelProvider.Factory{
-            override fun <T: ViewModel> create(modelClass:Class<T>):T{
-                return RegistratorViewModel(authRepositoryImpl) as T
-            }
-        }
-    )
-    Scaffold (
-        bottomBar = {
-            if (showBottomNav) {
-                BottomAppBar(containerColor = MaterialTheme.colorScheme.primaryContainer) {
-                    IconButton(onClick = {
-                        selected.value = Icons.Default.Home
-                        navController.navigate("home") { popUpTo(0) }
-                    }, modifier = Modifier.weight(1f)) {
-                        Icon(
-                            Icons.Default.Home, contentDescription = null,
-                            modifier = Modifier.size(25.dp),
-                            tint = if (selected.value == Icons.Default.Home)
-                                Color.White else Color.DarkGray
-                        )
-                    }
-                    IconButton(onClick = {
-                        selected.value = Icons.Default.Info
-                        navController.navigate("task") { popUpTo(0) }
-                    }, modifier = Modifier.weight(1f)) {
-                        Icon(
-                            Icons.Default.Info, contentDescription = null,
-                            modifier = Modifier.size(25.dp),
-                            tint = if (selected.value == Icons.Default.Info)
-                                Color.White else Color.DarkGray
-                        )
-                    }
-                    IconButton(onClick = {
-                        selected.value = Icons.Default.Person
-                        navController.navigate("profile") { popUpTo(0) }
-                    }, modifier = Modifier.weight(1f)) {
-                        Icon(
-                            Icons.Default.Person, contentDescription = null,
-                            modifier = Modifier.size(25.dp),
-                            tint = if (selected.value == Icons.Default.Person)
-                                Color.White else Color.DarkGray
-                        )
-                    }
-                }
-            }
-        }
-    ){ paddingValues ->
-        NavHost(navController,
-            startDestination = "registr",
-            modifier = Modifier.fillMaxSize().padding(paddingValues)) {
-            composable("home") { HomeScreen() }
-            composable(route = "profile") {
-                // 👈 ЗДЕСЬ МЫ ЧИТАЕМ userData
-                ProfileScreen(userData = userData)
-            }
-            composable("task"){ TaskScreen() }
-            composable("registr") { RegistrationScreen(viewModel,navController, onRegistrationSuccess = {user->
-                userData = user
-                navController.navigate("profile")
-            })}
-            composable("login") {
-                LoginScreen (viewModel,onLoginSuccess = { user-> userData = user
-                    // Потом навигируем
-                    navController.navigate("profile") {
-                        popUpTo("login") { inclusive = true }
-                    }
-                })
-            }
-
-        }
-    }
-
-}*/
-
 
 @Preview(showBackground = true)
 @Composable

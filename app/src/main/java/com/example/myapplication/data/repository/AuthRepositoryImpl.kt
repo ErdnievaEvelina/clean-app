@@ -1,7 +1,7 @@
 package com.example.myapplication.data.repository
 
 import android.util.Log
-import com.example.myapplication.PreferenceManager
+import com.example.myapplication.data.local.datastore.PreferenceManager
 import com.example.myapplication.data.api.AuthApi
 import com.example.myapplication.data.model.UserRegisterRequest
 import com.example.myapplication.domain.common.Result
@@ -17,7 +17,7 @@ import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.tasks.await
 import java.io.IOException
 
-class AuthRepositoryImplNew(
+class AuthRepositoryImpl(
     private val api: AuthApi,
     private val preferencesManager: PreferenceManager
 ): AuthRepository {

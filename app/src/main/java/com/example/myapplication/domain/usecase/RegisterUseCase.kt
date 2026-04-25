@@ -10,8 +10,8 @@ class RegisterUseCase(private val authRepository: AuthRepository) {
         name: String,
     ): Result<Unit> {
         if (email.isBlank()) return Result.Error("Введите эл. почту")
-        if (password.length < 8) return Result.Error("Пароль должен содержать не менее 6 символов")
+        if (password.length < 6) return Result.Error("Пароль должен содержать не менее 6 символов")
         if (name.isBlank()) return Result.Error("Введите ФИО")
-        return authRepository.register(email.trim(), password, name.trim())
+        return authRepository.register(email, password, name)
     }
 }
