@@ -1,175 +1,91 @@
 package com.example.myapplication.presentation
 
-import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material3.Button
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
-import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.unit.dp
-import androidx.navigation.NavController
-import com.example.myapplication.state.RegistrationState
-import com.example.myapplication.data.model.UserResponse
+import com.example.myapplication.presentation.screen.RegisterUserAction
+import com.example.myapplication.presentation.screen.RegisterViewModelNew
 
 
 @Composable
 fun RegistrationScreen(
-    viewModel: RegistratorViewModel,
-    navController: NavController,
-    onRegistrationSuccess: (UserResponse) -> Unit,
+    onRegisterSuccess: () -> Unit,
+    onGoToLogin: () -> Unit,
+    viewModel: RegisterViewModelNew
 ) {
+    val uiState by viewModel.uiState.collectAsState()
 
-    var nameText by remember { mutableStateOf("") }
-    var emailText by remember { mutableStateOf("") }
-    var passwordText by remember { mutableStateOf("") }
-    var confirmPasswordText by remember { mutableStateOf("") }
-    LaunchedEffect(nameText) {
-        viewModel.onNameChange(nameText)
+    LaunchedEffect(uiState.success) {
+        if (uiState.success) onRegisterSuccess()
     }
-    LaunchedEffect(emailText) {
-        viewModel.onEmailChange(emailText)
-    }
-    LaunchedEffect(passwordText) {
-        viewModel.onPasswordChange(passwordText)
-    }
-    LaunchedEffect(confirmPasswordText) {
-        viewModel.onConfirmPasswordChange(confirmPasswordText)
-    }
-    val registrationState by viewModel.registrationState.collectAsState()
-    val nameError by viewModel.nameError.collectAsState()
-    val emailError by viewModel.emailError.collectAsState()
-    val passwordError by viewModel.passwordError.collectAsState()
-    val confirmPasswordError by viewModel.confirmPasswordError.collectAsState()
-    val snackbarHostState = remember { SnackbarHostState() }
-    // Обработка успешной регистрации
-    LaunchedEffect(registrationState) {
-        when (val state = registrationState) {
-            is RegistrationState.Success -> {
-                snackbarHostState.showSnackbar("Регистрация успешна!")
-                onRegistrationSuccess(state.user)
-                viewModel.resetState()
-            }
-            is RegistrationState.Error -> {
-                snackbarHostState.showSnackbar(state.message)
-                viewModel.resetState()
-            }
-            else -> {}
-        }
-    }
-    Box(
-        modifier = Modifier
-            .fillMaxSize()
-    ) {
-        if (registrationState is RegistrationState.Loading ||
-            registrationState is RegistrationState.FirebaseCreating ||
-            registrationState is RegistrationState.BackendRegistering) {
-            Box(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .background(MaterialTheme.colorScheme.surface.copy(alpha = 0.7f)),
-                contentAlignment = Alignment.Center
-            ) {
-                Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                    CircularProgressIndicator()
-                    Spacer(modifier = Modifier.height(16.dp))
-                    Text(
-                        text = when (registrationState) {
-                            is RegistrationState.FirebaseCreating ->
-                                "Регистрация в Firebase..."
-                            is RegistrationState.BackendRegistering ->
-                                "Сохранение в базе данных..."
-                            else -> "Загрузка..."
-                        }
-                    )
-                }
-            }
-        }
-        Column(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(24.dp),
-            horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.spacedBy(16.dp)
+    Column(
+        modifier= Modifier.padding(25.dp),
+        verticalArrangement = Arrangement.Center,
+        horizontalAlignment = Alignment.CenterHorizontally
+    ){
+        Text("Вход")
+        Spacer(Modifier.height(32.dp))
+        OutlinedTextField(
+            value = uiState.email,
+            onValueChange = { viewModel.handleEvent(RegisterUserAction.EmailChanged(it)) },
+            label = { Text("Эл. почта") },
+            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Email),
+            modifier = Modifier.fillMaxWidth()
+        )
+        Spacer(Modifier.height(12.dp))
 
+        OutlinedTextField(
+            value = uiState.password,
+            onValueChange = { viewModel.handleEvent(RegisterUserAction.PasswordChanged(it)) },
+            label = { Text("Пароль") },
+            visualTransformation = PasswordVisualTransformation(),
+            modifier = Modifier.fillMaxWidth()
+        )
+        Spacer(Modifier.height(12.dp))
+
+        OutlinedTextField(
+            value = uiState.name,
+            onValueChange = { viewModel.handleEvent(RegisterUserAction.NameChanged(it)) },
+            label = { Text("ФИО") },
+            modifier = Modifier.fillMaxWidth()
+        )
+        Spacer(Modifier.height(24.dp))
+
+        Button(
+            onClick = { viewModel.handleEvent(RegisterUserAction.RegisterClicked) },
+            enabled = !uiState.isLoading,
+            modifier = Modifier.fillMaxWidth()
         ) {
-            Text(
-                text = "Создать аккаунт",
-                style = MaterialTheme.typography.headlineMedium,
-                fontWeight = FontWeight.Bold,
-                modifier = Modifier.padding(bottom = 24.dp)
-            )
-            OutlinedTextField(
-                value = emailText,
-                onValueChange = { emailText = it },
-                label ={Text("Email")},
-                isError = emailError != null,
-            )
-            OutlinedTextField(
-                value = nameText,
-                onValueChange = { nameText = it },
-                label = {Text("Name")},
-                isError = nameError != null
-            )
-            OutlinedTextField(
-                value = passwordText,
-                onValueChange = { passwordText = it },
-                label = {Text("Password")},
-                visualTransformation = PasswordVisualTransformation(),
-                isError = passwordError != null
-            )
-            OutlinedTextField(
-                value = confirmPasswordText,
-                onValueChange = { confirmPasswordText = it },
-                label = {Text("Подтвердите пароль")},
-                visualTransformation = PasswordVisualTransformation(),
-                isError = confirmPasswordError != null
-            )
-            Spacer(modifier = Modifier.height(24.dp))
+            if (uiState.isLoading) CircularProgressIndicator(Modifier.size(18.dp))
+            else Text("Зарегистрироваться")
+        }
+        Spacer(Modifier.height(12.dp))
 
-            Button(
-                onClick = { viewModel.register()
-                    // ДОБАВЛЯЕМ ПРЯМУЮ ПЕРЕДАЧУ ЗНАЧЕНИЙ
-                    viewModel.onNameChange(nameText)
-                    viewModel.onEmailChange(emailText)
-                    viewModel.onPasswordChange(passwordText)
-                    viewModel.onConfirmPasswordChange(confirmPasswordText)
-                    /*navController.navigate("profile")*/},
-                modifier = Modifier.fillMaxWidth(),
-                enabled =
-                        registrationState !is RegistrationState.Loading &&
-                        registrationState !is RegistrationState.FirebaseCreating &&
-                        registrationState !is RegistrationState.BackendRegistering
-            ) {
-                Text("Зарегистрироваться")
-            }
+        TextButton(onClick = onGoToLogin) { Text("Уже есть аккаунт? Войти") }
 
-            Spacer(modifier=Modifier.height(24.dp))
-            TextButton(onClick ={
-                navController.navigate("login")
-            }) {
-                Text("Уже есть аккаунт? Войдите")
-            }
+        uiState.error?.let {
+            Spacer(Modifier.height(8.dp))
+            Text(it, color = MaterialTheme.colorScheme.error)
         }
 
     }
