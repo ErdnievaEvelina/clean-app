@@ -5,6 +5,7 @@ import android.util.Log
 import com.example.myapplication.data.api.UserApi
 import com.example.myapplication.data.local.datastore.PreferenceManager
 import com.example.myapplication.data.model.UserRegisterRequest
+import com.example.myapplication.data.model.UserUpdateDto
 import com.example.myapplication.domain.common.Result
 import com.example.myapplication.domain.model.User
 import com.example.myapplication.domain.repository.UserRepository
@@ -20,12 +21,20 @@ class UserRepositoryImpl(
     override suspend fun getProfile(): Result<User> {
         return try {
             val authHeader = getAuthHeader()
+            Log.d(TAG, "getProfile: authHeader = $authHeader")
             if (authHeader == null) {
-                Result.Error("Пользователь не неайден")
+                return Result.Error("Пользователь не неайден")
             }
             Log.d(TAG, "Получение профиля...")
             val response = api.getProfile(authHeader)
             Log.d(TAG, "Профиль получен: ${response.email}")
+            preferencesManager.saveUserData(
+                idToken = preferencesManager.getIdToken() ?: "",
+                firebaseUid = preferencesManager.getFirebaseUid() ?: "",
+                userId = response.id,
+                email = response.email,
+                name = response.name
+            )
             Result.Success(response)
         }catch (e: HttpException){
             val errorMessage = when (e.code()) {
@@ -41,16 +50,16 @@ class UserRepositoryImpl(
     }
 
     override suspend fun updateUser(
-        email: String,
-        name: String
+        name: String,
+        avatarUrl:String?
     ): Result<User> {
         return try {
             val authHeader = getAuthHeader()
             if (authHeader == null) {
-                Result.Error("Пользователь не авторизован")
+                return Result.Error("Пользователь не авторизован")
             }
-            Log.d(TAG, "Обновление профиля: name=$name, email=$email")
-            val request = UserRegisterRequest(name, email)
+            Log.d(TAG, "Обновление профиля: name=$name")
+            val request = UserUpdateDto(name, avatarUrl)
             val response = api.updateUser(authHeader, request)
 
             preferencesManager.saveUserData(
@@ -77,11 +86,40 @@ class UserRepositoryImpl(
         }
     }
 
+    override suspend fun syncEmailFromFirebase(): Result<User> {
+        return try{
+            val authHeader = getAuthHeader()
+            if (authHeader == null) {
+                return Result.Error("Пользователь не неайден")
+            }
+            Log.d(TAG, "Синхронизация email из Firebase...")
+            val response = api.syncEmailFromFirebase(authHeader)
+
+            preferencesManager.saveUserData(
+                idToken = preferencesManager.getIdToken() ?: "",
+                firebaseUid = preferencesManager.getFirebaseUid() ?: "",
+                userId = response.id,
+                email = response.email,
+                name = response.name
+            )
+            Result.Success(response)
+        }catch (e: HttpException){
+            val errorMessage = when (e.code()) {
+                401 -> "Не авторизован"
+                404 -> "Пользователь не найден"
+                else -> "Ошибка синхронизации: ${e.code()}"
+            }
+            Result.Error(errorMessage)
+        }catch (e: Exception) {
+            Result.Error(e.message ?: "Ошибка синхронизации")
+        }
+    }
+
     override suspend fun deleteUser(): Result<Unit> {
         return try{
             val authHeader = getAuthHeader()
             if (authHeader == null) {
-                Result.Error("Профиль не авторизирован")
+                return Result.Error("Профиль не авторизирован")
             }
 
             Log.d(TAG, "Удаление аккаунта...")

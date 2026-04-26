@@ -1,6 +1,7 @@
 package com.example.myapplication.data
 
 import com.example.myapplication.data.api.AuthApi
+import com.example.myapplication.data.api.UserApi
 import retrofit2.Retrofit
 import retrofit2.converter.gson.GsonConverterFactory
 
@@ -10,4 +11,9 @@ object RetrofitInstance {
         .addConverterFactory(GsonConverterFactory.create())
         .build()
         .create(AuthApi::class.java)
+    val userApi = Retrofit.Builder()
+        .baseUrl(UserApi.URL)
+        .addConverterFactory(GsonConverterFactory.create())
+        .build()
+        .create(UserApi::class.java)
 }

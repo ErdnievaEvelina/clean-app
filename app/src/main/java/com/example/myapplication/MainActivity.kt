@@ -25,6 +25,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.viewModelScope
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
@@ -32,33 +33,43 @@ import androidx.navigation.compose.rememberNavController
 import com.example.myapplication.data.RetrofitInstance
 import com.example.myapplication.data.local.datastore.PreferenceManager
 import com.example.myapplication.data.repository.AuthRepositoryImpl
+import com.example.myapplication.data.repository.UserRepositoryImpl
+import com.example.myapplication.domain.usecase.DeleteUserUseCase
+import com.example.myapplication.domain.usecase.GetProfileUseCase
 import com.example.myapplication.domain.usecase.LoginUseCase
 import com.example.myapplication.domain.usecase.RegisterUseCase
+import com.example.myapplication.domain.usecase.SyncEmailUseCase
+import com.example.myapplication.domain.usecase.UpdateProfileUseCase
 import com.example.myapplication.presentation.HomeScreen
 import com.example.myapplication.presentation.LoginScreen
+import com.example.myapplication.presentation.ProfileScreen1
 import com.example.myapplication.presentation.RegistrationScreen
 import com.example.myapplication.presentation.TaskScreen
 import com.example.myapplication.presentation.screen.LoginViewModel
+import com.example.myapplication.presentation.screen.ProfileViewModel
 import com.example.myapplication.presentation.screen.RegisterViewModelNew
 import com.example.myapplication.ui.theme.MyApplicationTheme
 import com.google.firebase.FirebaseApp
+import kotlinx.coroutines.launch
 
 class MainActivity : ComponentActivity() {
     private lateinit var preferencesManager: PreferenceManager
     private lateinit var authRepositoryImpl: AuthRepositoryImpl
+    private lateinit var userRepository: UserRepositoryImpl
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
         FirebaseApp.initializeApp(this)
         preferencesManager = PreferenceManager(this)
         authRepositoryImpl = AuthRepositoryImpl(RetrofitInstance.api,preferencesManager)
+        userRepository = UserRepositoryImpl(RetrofitInstance.userApi,preferencesManager)
         setContent {
             MyApplicationTheme {
                 Surface(
                     modifier=Modifier.fillMaxSize(),
                     color = MaterialTheme.colorScheme.primaryContainer
                 ){
-                   AppNavGraph(authRepositoryImpl)
+                   AppNavGraph(authRepositoryImpl,userRepository)
                 }
             }
         }
@@ -67,7 +78,8 @@ class MainActivity : ComponentActivity() {
 
 @Composable
 fun AppNavGraph(
-    repository: AuthRepositoryImpl
+    repository: AuthRepositoryImpl,
+    userRepository: UserRepositoryImpl
 ){
     val selected= remember { mutableStateOf(Icons.Default.Home) }
     val navController= rememberNavController()
@@ -122,7 +134,26 @@ fun AppNavGraph(
             startDestination = "login",
             modifier = Modifier.fillMaxSize().padding(paddingValues)) {
             composable("home") { HomeScreen() }
-            composable(route = "profile") { }
+            composable(route = "profile") {
+                val viewModelUser = remember(userRepository){ ProfileViewModel(GetProfileUseCase(userRepository),
+                    UpdateProfileUseCase(userRepository), SyncEmailUseCase(userRepository), DeleteUserUseCase(userRepository)) }
+                ProfileScreen1(
+                    viewModel = viewModelUser,
+                    onLogout = {
+                        viewModelUser.viewModelScope.launch {
+                            repository.logout()
+                            navController.navigate("login") {
+                                popUpTo("profile") { inclusive = true }
+                            }
+                        }
+                    },
+                    onProfileDeleted = {
+                        navController.navigate("login") {
+                            popUpTo("profile") { inclusive = true }
+                        }
+                    }
+                )
+            }
             composable("task"){ TaskScreen() }
             composable("register") {
                 val viewModelRegister = remember(repository){ RegisterViewModelNew(RegisterUseCase(repository)) }
@@ -135,7 +166,7 @@ fun AppNavGraph(
             composable("login") {
                 val viewModelLogin = remember(repository){ LoginViewModel(LoginUseCase(repository)) }
                 LoginScreen(
-                    onLoginSuccess = { navController.navigate("home") { popUpTo(0) } },
+                    onLoginSuccess = { navController.navigate("profile") { popUpTo(0) } },
                     onGoToRegister = { navController.navigate("register") },
                     viewModel = viewModelLogin
                 )
