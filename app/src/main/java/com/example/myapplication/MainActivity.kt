@@ -34,6 +34,7 @@ import com.example.myapplication.data.RetrofitInstance
 import com.example.myapplication.data.local.datastore.PreferenceManager
 import com.example.myapplication.data.repository.AuthRepositoryImpl
 import com.example.myapplication.data.repository.UserRepositoryImpl
+import com.example.myapplication.domain.usecase.ChangeEmailUseCase
 import com.example.myapplication.domain.usecase.DeleteUserUseCase
 import com.example.myapplication.domain.usecase.GetProfileUseCase
 import com.example.myapplication.domain.usecase.LoginUseCase
@@ -49,7 +50,9 @@ import com.example.myapplication.presentation.screen.LoginViewModel
 import com.example.myapplication.presentation.screen.ProfileViewModel
 import com.example.myapplication.presentation.screen.RegisterViewModelNew
 import com.example.myapplication.ui.theme.MyApplicationTheme
+import com.google.firebase.Firebase
 import com.google.firebase.FirebaseApp
+import com.google.firebase.auth.auth
 import kotlinx.coroutines.launch
 
 class MainActivity : ComponentActivity() {
@@ -136,7 +139,11 @@ fun AppNavGraph(
             composable("home") { HomeScreen() }
             composable(route = "profile") {
                 val viewModelUser = remember(userRepository){ ProfileViewModel(GetProfileUseCase(userRepository),
-                    UpdateProfileUseCase(userRepository), SyncEmailUseCase(userRepository), DeleteUserUseCase(userRepository)) }
+                    UpdateProfileUseCase(userRepository),
+                    ChangeEmailUseCase(userRepository, firebaseAuth = Firebase.auth),
+                    SyncEmailUseCase(userRepository),
+                    DeleteUserUseCase(userRepository))
+                }
                 ProfileScreen1(
                     viewModel = viewModelUser,
                     onLogout = {

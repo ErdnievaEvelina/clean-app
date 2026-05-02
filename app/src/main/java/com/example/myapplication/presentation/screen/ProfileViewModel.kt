@@ -4,6 +4,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.myapplication.domain.common.Result
 import com.example.myapplication.domain.model.User
+import com.example.myapplication.domain.usecase.ChangeEmailUseCase
 import com.example.myapplication.domain.usecase.DeleteUserUseCase
 import com.example.myapplication.domain.usecase.GetProfileUseCase
 import com.example.myapplication.domain.usecase.SyncEmailUseCase
@@ -18,18 +19,26 @@ data class ProfileUiState(
     val error:String?= null,
     val success:Boolean = false,
     val isEditing: Boolean = false,
+    val isChangingEmail: Boolean = false,  // Новое состояние
     val isSyncing: Boolean = false,
     val user: User? = null,
     val name: String = "",
-    val email: String = ""
+    val email: String = "",
+    val newEmail: String = "",  // Для нового email
+    val password: String = ""   // Для подтверждения пароля
 )
 
 sealed class ProfileAction{
     data class NameChanged(val value: String) : ProfileAction()
     data class EmailChanged(val value: String) : ProfileAction()
+    data class NewEmailChanged(val value: String) : ProfileAction()  // Для нового email
+    data class PasswordChanged(val value: String) : ProfileAction()
     data object EditClicked : ProfileAction()
     data object SaveClicked : ProfileAction()
     data object DeleteClicked : ProfileAction()
+    data object ChangeEmailClicked : ProfileAction()  // Новая кнопка
+    data object ConfirmEmailChange : ProfileAction()   // Подтверждение смены email
+    data object CancelEmailChange : ProfileAction()    // Отмена
     data object ErrorDismissed : ProfileAction()
     data object LoadProfile : ProfileAction()
     data object SyncEmail : ProfileAction()
@@ -37,6 +46,7 @@ sealed class ProfileAction{
 class ProfileViewModel(
     private val getProfileUseCase: GetProfileUseCase,
     private val updateProfileUseCase: UpdateProfileUseCase,
+    private val changeEmailUseCase: ChangeEmailUseCase,
     private val syncEmailUseCase: SyncEmailUseCase,
     private val deleteUserUseCase: DeleteUserUseCase
 ): ViewModel() {
@@ -68,7 +78,49 @@ class ProfileViewModel(
             }
             ProfileAction.SaveClicked -> saveProfile()
             ProfileAction.SyncEmail -> syncEmail()
+            ProfileAction.CancelEmailChange -> {_uiState.update { it.copy(isChangingEmail = false) }}
+            ProfileAction.ChangeEmailClicked -> {
+                _uiState.update {
+                    it.copy(
+                        isChangingEmail = true,
+                        newEmail = "",
+                        password = ""
+                    )
+                }
+            }
+            ProfileAction.ConfirmEmailChange -> changeEmail()
+            is ProfileAction.NewEmailChanged -> {_uiState.update { it.copy(newEmail = action.value) }}
+            is ProfileAction.PasswordChanged -> {_uiState.update { it.copy(password = action.value) }}
         }
+    }
+
+    private fun changeEmail() {
+       viewModelScope.launch {
+           _uiState.update {
+               it.copy(
+                   isLoading = true,
+                   error = null,
+                   isChangingEmail = false
+               )
+           }
+           when (val result = changeEmailUseCase(
+               uiState.value.newEmail,
+               uiState.value.password
+           )) {
+               is Result.Error -> {_uiState.update { it.copy(isLoading = false, error = result.message) }}
+               Result.Loading -> {}
+               is Result.Success -> {
+                   _uiState.update {
+                       it.copy(
+                           isLoading = false,
+                           user = result.data,
+                           email = result.data.email,
+                           success = true
+                       )
+                   }
+               }
+           }
+       }
     }
 
     private fun loadProfile(){

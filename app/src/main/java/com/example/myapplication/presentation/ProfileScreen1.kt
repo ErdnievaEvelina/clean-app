@@ -1,5 +1,6 @@
 package com.example.myapplication.presentation
 
+import android.app.AlertDialog
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -9,14 +10,18 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.Person
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedTextField
@@ -28,6 +33,8 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.text.input.KeyboardType
+import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.unit.dp
 import com.example.myapplication.domain.model.User
 import com.example.myapplication.presentation.screen.ProfileAction
@@ -45,7 +52,6 @@ fun ProfileScreen1(
         viewModel.handleAction(ProfileAction.LoadProfile)
     }
 
-    // Отслеживаем успешное удаление
     LaunchedEffect(uiState.success) {
         if (uiState.success && uiState.user == null) {
             onProfileDeleted()
@@ -62,6 +68,16 @@ fun ProfileScreen1(
             uiState.isLoading -> {
                 CircularProgressIndicator()
             }
+            uiState.isChangingEmail -> {
+                ChangeEmailDialog(
+                    newEmail = uiState.newEmail,
+                    password = uiState.password,
+                    onNewEmailChange = { viewModel.handleAction(ProfileAction.NewEmailChanged(it)) },
+                    onPasswordChange = { viewModel.handleAction(ProfileAction.PasswordChanged(it)) },
+                    onConfirm = { viewModel.handleAction(ProfileAction.ConfirmEmailChange) },
+                    onCancel = { viewModel.handleAction(ProfileAction.CancelEmailChange) }
+                )
+            }
             uiState.error != null -> {
                 Text(
                     text = uiState.error!!,
@@ -73,11 +89,9 @@ fun ProfileScreen1(
                 }
             }
             else -> {
-                // Отображаем данные профиля
                 if (uiState.isEditing) {
                     EditProfileContent(
                         name = uiState.name,
-                        email = uiState.email,
                         onNameChange = { viewModel.handleAction(ProfileAction.NameChanged(it)) },
                         onSave = { viewModel.handleAction(ProfileAction.SaveClicked) },
                         onCancel = { viewModel.handleAction(ProfileAction.EditClicked) }
@@ -86,6 +100,7 @@ fun ProfileScreen1(
                     ProfileContent(
                         user = uiState.user,
                         onEdit = { viewModel.handleAction(ProfileAction.EditClicked) },
+                        onChangeEmail = { viewModel.handleAction(ProfileAction.ChangeEmailClicked)},
                         onSyncEmail = { viewModel.handleAction(ProfileAction.SyncEmail) },
                         onDelete = { viewModel.handleAction(ProfileAction.DeleteClicked) },
                         onLogout = onLogout
@@ -100,6 +115,7 @@ fun ProfileScreen1(
 fun ProfileContent(
     user: User?,
     onEdit: () -> Unit,
+    onChangeEmail: () -> Unit,
     onSyncEmail: () -> Unit,
     onDelete: () -> Unit,
     onLogout: () -> Unit
@@ -124,17 +140,31 @@ fun ProfileContent(
                 )
 
                 Spacer(modifier = Modifier.height(16.dp))
-
-                Text(
-                    text = user?.name ?: "Имя не указано",
-                    style = MaterialTheme.typography.headlineSmall
-                )
-
-                Text(
-                    text = user?.email ?: "Email не указан",
-                    style = MaterialTheme.typography.bodyMedium,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
-                )
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.Center
+                ) {
+                    Text(
+                        text = user?.name ?: "Имя не указано",
+                        style = MaterialTheme.typography.headlineSmall
+                    )
+                    IconButton(onClick = onEdit) {
+                        Icon(Icons.Default.Edit, contentDescription = "Редактировать имя")
+                    }
+                }
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.Center
+                ) {
+                    Text(
+                        text = user?.email ?: "Email не указан",
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                    IconButton(onClick = onChangeEmail) {
+                        Icon(Icons.Default.Edit, contentDescription = "Сменить email")
+                    }
+                }
 
                 Spacer(modifier = Modifier.height(8.dp))
 
@@ -148,14 +178,12 @@ fun ProfileContent(
 
         Spacer(modifier = Modifier.height(16.dp))
 
-        Button(
+        /*Button(
             onClick = onEdit,
             modifier = Modifier.fillMaxWidth()
         ) {
             Text("Редактировать профиль")
-        }
-
-        Spacer(modifier = Modifier.height(8.dp))
+        }*/
 
         OutlinedButton(
             onClick = onSyncEmail,
@@ -196,7 +224,6 @@ fun ProfileContent(
 @Composable
 fun EditProfileContent(
     name: String,
-    email: String,
     onNameChange: (String) -> Unit,
     onSave: () -> Unit,
     onCancel: () -> Unit
@@ -217,14 +244,13 @@ fun EditProfileContent(
                 singleLine = true
             )
 
-            OutlinedTextField(
+            /*OutlinedTextField(
                 value = email,
                 onValueChange = {},
                 label = { Text("Email (не редактируется)") },
                 modifier = Modifier.fillMaxWidth(),
-                enabled = false,
                 singleLine = true
-            )
+            )*/
 
             Spacer(modifier = Modifier.height(16.dp))
 
@@ -248,4 +274,61 @@ fun EditProfileContent(
             }
         }
     }
+}
+@Composable
+fun ChangeEmailDialog(
+    newEmail: String,
+    password: String,
+    onNewEmailChange: (String) -> Unit,
+    onPasswordChange: (String) -> Unit,
+    onConfirm: () -> Unit,
+    onCancel: () -> Unit
+){
+    AlertDialog(
+        onDismissRequest = onCancel,
+        title = { Text("Сменить email") },
+        text = {
+            Column {
+                OutlinedTextField(
+                    value = newEmail,
+                    onValueChange = onNewEmailChange,
+                    label = { Text("Новый email") },
+                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Email),
+                    modifier = Modifier.fillMaxWidth()
+                )
+
+                Spacer(modifier = Modifier.height(8.dp))
+
+                OutlinedTextField(
+                    value = password,
+                    onValueChange = onPasswordChange,
+                    label = { Text("Подтвердите пароль") },
+                    visualTransformation = PasswordVisualTransformation(),
+                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password),
+                    modifier = Modifier.fillMaxWidth()
+                )
+
+                Text(
+                    text = "Для безопасности требуется подтверждение пароля",
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    modifier = Modifier.padding(top = 8.dp)
+                )
+            }
+        },
+        confirmButton = {
+            TextButton(
+                onClick = onConfirm,
+                enabled = newEmail.isNotBlank() && password.isNotBlank()
+            ) {
+                Text("Сменить")
+            }
+        },
+        dismissButton = {
+            TextButton(onClick = onCancel) {
+                Text("Отмена")
+            }
+        }
+    )
+
 }

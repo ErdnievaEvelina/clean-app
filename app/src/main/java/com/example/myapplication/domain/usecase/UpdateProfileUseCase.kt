@@ -11,5 +11,5 @@ class UpdateProfileUseCase(
     suspend operator fun invoke(
         name: String,
         avatarUrl:String?
-    ): Result<User> = repository.updateUser(name, avatarUrl)
+    ): Result<User> = repository.updateUser(name,avatarUrl)
 }
