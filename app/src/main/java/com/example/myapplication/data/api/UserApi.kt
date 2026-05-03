@@ -1,6 +1,6 @@
 package com.example.myapplication.data.api
 
-import com.example.myapplication.data.model.UserRegisterRequest
+import com.example.myapplication.data.model.UserHouseholdResponseDTO
 import com.example.myapplication.data.model.UserUpdateDto
 import com.example.myapplication.domain.model.User
 import retrofit2.Response
@@ -32,6 +32,11 @@ interface UserApi {
     suspend fun deleteUser(
         @Header("Authorization") authorization: String?
     ): Response<Unit>
+    // Получить список хозяйств пользователя
+    @GET("/api/households/myHouseholds")
+    suspend fun getUserHouseholds(
+        @Header("Authorization") authorization: String
+    ): List<UserHouseholdResponseDTO>
     companion object{
         const val URL="http://10.0.2.2:8080"
     }

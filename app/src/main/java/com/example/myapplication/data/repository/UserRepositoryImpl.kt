@@ -4,6 +4,7 @@ package com.example.myapplication.data.repository
 import android.util.Log
 import com.example.myapplication.data.api.UserApi
 import com.example.myapplication.data.local.datastore.PreferenceManager
+import com.example.myapplication.data.model.UserHouseholdResponseDTO
 import com.example.myapplication.data.model.UserRegisterRequest
 import com.example.myapplication.data.model.UserUpdateDto
 import com.example.myapplication.domain.common.Result
@@ -138,6 +139,20 @@ class UserRepositoryImpl(
             Result.Error(e.message?:"Ошибка удаления")
         }
     }
+
+    override suspend fun getUserHouseholds(): Result<List<UserHouseholdResponseDTO>> {
+        return try{
+            val authHeader = getAuthHeader()
+            if (authHeader == null) {
+                return Result.Error("Пользователь не неайден")
+            }
+            val response = api.getUserHouseholds(authHeader)
+            Result.Success(response)
+        }catch (e: Exception) {
+            Result.Error(e.message ?: "Ошибка получения списка")
+        }
+    }
+
     private fun getAuthHeader(): String? {
         val token = preferencesManager.getIdToken()
         return if (!token.isNullOrEmpty()) "Bearer $token" else null

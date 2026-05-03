@@ -1,5 +1,6 @@
 package com.example.myapplication.domain.repository
 
+import com.example.myapplication.data.model.UserHouseholdResponseDTO
 import com.example.myapplication.domain.common.Result
 import com.example.myapplication.domain.model.User
 
@@ -8,4 +9,5 @@ interface UserRepository {
     suspend fun updateUser(name:String,avatarUrl:String?): Result<User>
     suspend fun syncEmailFromFirebase(): Result<User>
     suspend fun deleteUser(): Result<Unit>
+    suspend fun getUserHouseholds(): Result<List<UserHouseholdResponseDTO>>
 }

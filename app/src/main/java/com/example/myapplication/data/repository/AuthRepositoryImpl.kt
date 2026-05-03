@@ -146,4 +146,7 @@ class AuthRepositoryImpl(
             delay(500)
             firebaseAuth.currentUser != null && preferencesManager.isLoggedIn()}
     }
+    fun getCurrentUserId(): String? {
+        return preferencesManager.getUserId()
+    }
 }

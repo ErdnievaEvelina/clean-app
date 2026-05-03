@@ -1,7 +1,9 @@
 package com.example.myapplication.data.local.datastore
 
+import android.annotation.SuppressLint
 import android.content.Context
 import android.content.SharedPreferences
+import android.util.Log
 import androidx.core.content.edit
 
 class PreferenceManager(context: Context) {
@@ -12,6 +14,7 @@ class PreferenceManager(context: Context) {
         private const val KEY_USER_ID = "user_id"
         private const val KEY_USER_EMAIL = "user_email"
         private const val KEY_USER_NAME = "user_name"
+        private const val KEY_CURRENT_HOUSEHOLD_ID = "current_household_id"
     }
     fun saveUserData(
         idToken: String,
@@ -53,4 +56,17 @@ class PreferenceManager(context: Context) {
         "email" to prefs.getString(KEY_USER_EMAIL, null),
         "name" to prefs.getString(KEY_USER_NAME, null)
     )
+    fun saveCurrentHouseholdId(householdId: String) {
+        Log.d("PreferenceManager", "saveCurrentHouseholdId: $householdId")
+        prefs.edit { putString(KEY_CURRENT_HOUSEHOLD_ID, householdId) }
+    }
+
+    fun getCurrentHouseholdId(): String? {
+        return prefs.getString(KEY_CURRENT_HOUSEHOLD_ID, null)
+    }
+
+    @SuppressLint("UseKtx")
+    fun clearCurrentHouseholdId() {
+        prefs.edit { remove(KEY_CURRENT_HOUSEHOLD_ID) }
+    }
 }

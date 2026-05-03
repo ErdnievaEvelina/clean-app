@@ -2,11 +2,13 @@ package com.example.myapplication.presentation.screen
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.example.myapplication.data.model.UserHouseholdResponseDTO
 import com.example.myapplication.domain.common.Result
 import com.example.myapplication.domain.model.User
 import com.example.myapplication.domain.usecase.ChangeEmailUseCase
 import com.example.myapplication.domain.usecase.DeleteUserUseCase
 import com.example.myapplication.domain.usecase.GetProfileUseCase
+import com.example.myapplication.domain.usecase.GetUserHouseholdsSummaryUseCase
 import com.example.myapplication.domain.usecase.SyncEmailUseCase
 import com.example.myapplication.domain.usecase.UpdateProfileUseCase
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -25,7 +27,9 @@ data class ProfileUiState(
     val name: String = "",
     val email: String = "",
     val newEmail: String = "",  // Для нового email
-    val password: String = ""   // Для подтверждения пароля
+    val password: String = "", // Для подтверждения пароля
+    val userHouseholds: List<UserHouseholdResponseDTO> = emptyList(),  // ДОБАВИТЬ
+    val isLoadingHouseholds: Boolean = false,
 )
 
 sealed class ProfileAction{
@@ -42,18 +46,21 @@ sealed class ProfileAction{
     data object ErrorDismissed : ProfileAction()
     data object LoadProfile : ProfileAction()
     data object SyncEmail : ProfileAction()
+    data object LoadHouseholds : ProfileAction()
 }
 class ProfileViewModel(
     private val getProfileUseCase: GetProfileUseCase,
     private val updateProfileUseCase: UpdateProfileUseCase,
     private val changeEmailUseCase: ChangeEmailUseCase,
     private val syncEmailUseCase: SyncEmailUseCase,
-    private val deleteUserUseCase: DeleteUserUseCase
+    private val deleteUserUseCase: DeleteUserUseCase,
+    private val getUserHouseholdsUseCase: GetUserHouseholdsSummaryUseCase
 ): ViewModel() {
     private val _uiState = MutableStateFlow(ProfileUiState())
     val uiState= _uiState.asStateFlow()
     init{
         loadProfile()
+        loadUserHouseholds()
     }
     fun handleAction(action: ProfileAction) {
         when(action){
@@ -91,6 +98,7 @@ class ProfileViewModel(
             ProfileAction.ConfirmEmailChange -> changeEmail()
             is ProfileAction.NewEmailChanged -> {_uiState.update { it.copy(newEmail = action.value) }}
             is ProfileAction.PasswordChanged -> {_uiState.update { it.copy(password = action.value) }}
+            ProfileAction.LoadHouseholds -> loadUserHouseholds()
         }
     }
 
@@ -184,6 +192,23 @@ class ProfileViewModel(
                 is Result.Success -> _uiState.update { it.copy(isLoading = false, success = true) }
                 is Result.Error -> _uiState.update { it.copy(isLoading = false, error = result.message) }
                 is Result.Loading -> {}
+            }
+        }
+    }
+    private fun loadUserHouseholds() {
+        viewModelScope.launch {
+            _uiState.update { it.copy(isLoadingHouseholds = true) }
+            when (val result = getUserHouseholdsUseCase()) {
+                is Result.Error -> {_uiState.update {
+                    it.copy(isLoadingHouseholds = false, error = result.message)
+                }}
+                Result.Loading -> {}
+                is Result.Success -> {_uiState.update {
+                    it.copy(
+                        isLoadingHouseholds = false,
+                        userHouseholds = result.data
+                    )
+                }}
             }
         }
     }
