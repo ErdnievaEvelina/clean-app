@@ -148,6 +148,7 @@ class HouseholdRepositoryImpl(
                     householdsWithInfo.add(HouseholdWithUserInfo(household, userHousehold))
                 } catch (e: Exception) {
                     Log.e(TAG, "Ошибка получения хозяйства ${userHousehold.householdId}")
+                    Result.Error(e.message ?: "Ошибка получения хозяйства")
                 }
             }
             Result.Success(householdsWithInfo)

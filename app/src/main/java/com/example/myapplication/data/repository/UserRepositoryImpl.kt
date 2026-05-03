@@ -5,7 +5,6 @@ import android.util.Log
 import com.example.myapplication.data.api.UserApi
 import com.example.myapplication.data.local.datastore.PreferenceManager
 import com.example.myapplication.data.model.UserHouseholdResponseDTO
-import com.example.myapplication.data.model.UserRegisterRequest
 import com.example.myapplication.data.model.UserUpdateDto
 import com.example.myapplication.domain.common.Result
 import com.example.myapplication.domain.model.User
