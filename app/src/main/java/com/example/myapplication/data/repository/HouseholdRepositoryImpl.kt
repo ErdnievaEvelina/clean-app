@@ -3,11 +3,11 @@ package com.example.myapplication.data.repository
 import android.util.Log
 import com.example.myapplication.data.api.HouseholdApi
 import com.example.myapplication.data.local.datastore.PreferenceManager
-import com.example.myapplication.data.model.HouseholdRegisterDTO
-import com.example.myapplication.data.model.HouseholdWithUserInfo
-import com.example.myapplication.data.model.UserHouseholdJoinDTO
-import com.example.myapplication.data.model.UserHouseholdResponseDTO
-import com.example.myapplication.data.model.UserResponse
+import com.example.myapplication.data.model.household.HouseholdRegisterDTO
+import com.example.myapplication.data.model.household.HouseholdWithUserInfo
+import com.example.myapplication.data.model.household.UserHouseholdJoinDTO
+import com.example.myapplication.data.model.household.UserHouseholdResponseDTO
+import com.example.myapplication.data.model.user.UserResponse
 import com.example.myapplication.domain.common.Result
 import com.example.myapplication.domain.model.Household
 import com.example.myapplication.domain.repository.HouseholdRepository

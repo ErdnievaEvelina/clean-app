@@ -1,9 +1,9 @@
 package com.example.myapplication.data.api
 
-import com.example.myapplication.data.model.HouseholdRegisterDTO
-import com.example.myapplication.data.model.UserHouseholdJoinDTO
-import com.example.myapplication.data.model.UserHouseholdResponseDTO
-import com.example.myapplication.data.model.UserResponse
+import com.example.myapplication.data.model.household.HouseholdRegisterDTO
+import com.example.myapplication.data.model.household.UserHouseholdJoinDTO
+import com.example.myapplication.data.model.household.UserHouseholdResponseDTO
+import com.example.myapplication.data.model.user.UserResponse
 import com.example.myapplication.domain.model.Household
 import retrofit2.http.Body
 import retrofit2.http.DELETE
@@ -67,7 +67,4 @@ interface HouseholdApi {
         @Path("userToRemoveId") userToRemoveId: String
     ): retrofit2.Response<Unit>
 
-    companion object {
-        const val BASE_URL = "http://10.0.2.2:8080"
-    }
 }

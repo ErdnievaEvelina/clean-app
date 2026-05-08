@@ -4,8 +4,8 @@ package com.example.myapplication.data.repository
 import android.util.Log
 import com.example.myapplication.data.api.UserApi
 import com.example.myapplication.data.local.datastore.PreferenceManager
-import com.example.myapplication.data.model.UserHouseholdResponseDTO
-import com.example.myapplication.data.model.UserUpdateDto
+import com.example.myapplication.data.model.household.UserHouseholdResponseDTO
+import com.example.myapplication.data.model.user.UserUpdateDto
 import com.example.myapplication.domain.common.Result
 import com.example.myapplication.domain.model.User
 import com.example.myapplication.domain.repository.UserRepository

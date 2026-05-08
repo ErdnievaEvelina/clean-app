@@ -3,7 +3,7 @@ package com.example.myapplication.data.repository
 import android.util.Log
 import com.example.myapplication.data.local.datastore.PreferenceManager
 import com.example.myapplication.data.api.AuthApi
-import com.example.myapplication.data.model.UserRegisterRequest
+import com.example.myapplication.data.model.user.UserRegisterRequest
 import com.example.myapplication.domain.common.Result
 import com.example.myapplication.domain.repository.AuthRepository
 import com.google.firebase.Firebase

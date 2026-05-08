@@ -1,6 +1,6 @@
 package com.example.myapplication.domain.usecase
 
-import com.example.myapplication.data.model.UserHouseholdResponseDTO
+import com.example.myapplication.data.model.household.UserHouseholdResponseDTO
 import com.example.myapplication.domain.repository.HouseholdRepository
 import com.example.myapplication.domain.common.Result
 

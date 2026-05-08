@@ -1,6 +1,6 @@
 package com.example.myapplication.domain.repository
 
-import com.example.myapplication.data.model.UserHouseholdResponseDTO
+import com.example.myapplication.data.model.household.UserHouseholdResponseDTO
 import com.example.myapplication.domain.common.Result
 import com.example.myapplication.domain.model.User
 

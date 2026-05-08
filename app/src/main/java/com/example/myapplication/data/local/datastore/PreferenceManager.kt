@@ -48,7 +48,6 @@ class PreferenceManager(context: Context) {
         prefs.edit { clear() }
     }
 
-    // Получаем все данные пользователя
     fun getUserData(): Map<String, String?> = mapOf(
         "idToken" to getIdToken(),
         "firebaseUid" to getFirebaseUid(),
